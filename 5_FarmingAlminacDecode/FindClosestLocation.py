@@ -11,11 +11,18 @@ hmid_lctn_map = {}
 
 def get_seeds(seed_line):
     seeds_str = seed_line.split(": ")[1]
-    for seed in seeds_str.split():
-        seeds.append(int(seed))
+    seeds_array = seeds_str.split()
+    last = len(seeds_array)
+    i = 0
+    while i < last:
+        range_start = int(seeds_array[i])
+        i += 1
+        range_end = range_start + int(seeds_array[i])
+        lseed_range = range(range_start, range_end)
+        seeds.append(lseed_range)
+        i += 1
 
 def process_line_into_map(line, map):
-    #print("Attempting to add this line to a map: " + line)
     split = line.split()
     range_start = int(split[1])
     range_end = range_start + int(split[2])
@@ -25,11 +32,8 @@ def process_line_into_map(line, map):
 
 def decode_by_map(input, map):
     for key, value in map.items():
-        #print(str(key) + str(value) + " " + str(input))
         if input in key:
-            print(str(input) + " in range " + str(key))
             return input - value
-    #print("mapped " + str(input) + " to " + str(input))
     return input
 
 with open(sys.argv[1], "r", encoding="utf-8") as file:
@@ -93,16 +97,22 @@ with open(sys.argv[1], "r", encoding="utf-8") as file:
         process_line_into_map(line, hmid_lctn_map)
         line = file.readline()
 
-locations = []
-for seed in seeds:
-    soil = decode_by_map(seed, seed_soil_map)
-    fert = decode_by_map(soil, soil_fert_map)
-    watr = decode_by_map(fert, fert_watr_map)
-    lght = decode_by_map(watr, watr_lght_map)
-    temp = decode_by_map(lght, lght_temp_map)
-    hmid = decode_by_map(temp, temp_hmid_map)
-    location = decode_by_map(hmid, hmid_lctn_map)
-    print("seed " + str(seed) + " location " + str(location))
-    locations.append(location)
+smallest_location = 9999999999999 # A total non-production hack
+i = 0
+for seed_range in seeds:
+    print(str(seed_range))
+    for seed in seed_range:
+        i += 1
+        if i % 100000 == 0:
+            print("Seeds checked: " + str(i))
+        soil = decode_by_map(seed, seed_soil_map)
+        fert = decode_by_map(soil, soil_fert_map)
+        watr = decode_by_map(fert, fert_watr_map)
+        lght = decode_by_map(watr, watr_lght_map)
+        temp = decode_by_map(lght, lght_temp_map)
+        hmid = decode_by_map(temp, temp_hmid_map)
+        location = decode_by_map(hmid, hmid_lctn_map)
+        if location < smallest_location:
+            smallest_location = location
 
-print("Closest (min) location: " + str(min(locations)))
+print("Closest (min) location: " + str(smallest_location))
