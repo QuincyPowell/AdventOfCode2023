@@ -25,27 +25,35 @@ def difference_integer_series(integer_series):
         cursor += 1
     return difference_series
 
-def predict_next_int_for_series(integer_series):
+def predict_prev_and_next_int_for_series(integer_series):
+    if is_all_zero(integer_series):
+        return 0
+
     integer_series_stack = []
     next_series = integer_series.copy()
 
     while not is_all_zero(next_series):
-        integer_series_stack.append(next_series)
+        integer_series_stack.append((next_series[0], next_series[-1]))
         next_series = difference_integer_series(next_series)
 
     current_series = integer_series_stack.pop()
-    next_integer = current_series[-1]
+    previous_integer = current_series[0]
+    next_integer = current_series[1]
     while integer_series_stack:
         current_series = integer_series_stack.pop()
-        next_integer = current_series[-1] + next_integer
+        previous_integer = current_series[0] - previous_integer
+        next_integer = current_series[1] + next_integer
 
-    return next_integer
+    return (previous_integer, next_integer)
 
-sum_of_predicted_values = 0
+sum_of_previous_predicted_values = 0
+sum_of_next_predicted_values = 0
 for series in input_data:
     print(series)
-    predicted_value = predict_next_int_for_series(series)
-    print(predicted_value)
-    sum_of_predicted_values += predicted_value
+    predicted_values = predict_prev_and_next_int_for_series(series)
+    print(predicted_values)
+    sum_of_previous_predicted_values += predicted_values[0]
+    sum_of_next_predicted_values += predicted_values[1]
 
-print("Sum of predicted values: " + str(sum_of_predicted_values))
+print("Sum of previous predicted values: " + str(sum_of_previous_predicted_values))
+print("Sum of next predicted values: " + str(sum_of_next_predicted_values))
