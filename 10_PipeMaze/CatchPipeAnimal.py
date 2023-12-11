@@ -8,37 +8,46 @@ travelers = []
 start_re = re.compile("S")
 
 class MazeTraveler:
+    # Define cardinal adjacencies to avoid confusing them
+    UP = (0, -1)
+    DOWN = (0, 1)
+    LEFT = (-1, 0)
+    RIGHT = (1, 0)
+    # What symbols connect to what adjacencies
     maze_legend = {
         ".": [],
-        "|": [(0, 1), (0, -1)],
-        "-": [(1, 0), (-1, 0)],
-        "L": [(0, -1), (1, 0)],
-        "J": [(0, -1), (-1, 0)],
-        "7": [(-1, 0), (0, 1)],
-        "F": [(1, 0), (0, 1)]
-        # Should never encounter S as it is the start
-        # "S": [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        "#": []
+        "|": [UP, DOWN],
+        "-": [LEFT, RIGHT],
+        "L": [UP, RIGHT],
+        "J": [UP, LEFT],
+        "7": [DOWN, LEFT],
+        "F": [DOWN, RIGHT]
+        # Should never encounter S during traversal as it is the start,
+        # but it is assumed that S *could* connect to any adjacent
+        # "S": [UP, DOWN, LEFT, RIGHT]
     }
 
-    @staticmethod
-    def is_valid_start(maze_start, traveler_first_step, given_maze):
+    @classmethod
+    def is_valid_start(cls, maze_start, traveler_first_step, given_maze):
         x = maze_start[0] + traveler_first_step[0]
         y = maze_start[1] + traveler_first_step[1]
         traveler_start_coord = (x, y)
         symbol = given_maze[traveler_start_coord[1]][traveler_start_coord[0]]
+        # starting outside a pipe not permitted
         if symbol == ".":
             return False
         # check up position start connects to start below it
-        if traveler_first_step == (0, -1) and (symbol == "|" or symbol == "7" or symbol == "F"):
+        if traveler_first_step == cls.UP and (symbol == "|" or symbol == "7" or symbol == "F"):
             return True
         # check down position start connects to start above it
-        if traveler_first_step == (0, 1) and (symbol == "|" or symbol == "J" or symbol == "L"):
+        if traveler_first_step == cls.DOWN and (symbol == "|" or symbol == "J" or symbol == "L"):
             return True
         # check right position start connects to start left of it
-        if traveler_first_step == (1, 0) and (symbol == "-" or symbol == "J" or symbol == "7"):
+        if traveler_first_step == cls.RIGHT and (symbol == "-" or symbol == "J" or symbol == "7"):
             return True
         # check left position start connects to start right of it
-        if traveler_first_step == (-1, 0) and (symbol == "-" or symbol == "L" or symbol == "F"):
+        if traveler_first_step == cls.LEFT and (symbol == "-" or symbol == "L" or symbol == "F"):
             return True
         # all remaining cases are a bad start - not connected to maze_start
         print("Symbol was: " + symbol + " and first step was " + str(traveler_first_step))
@@ -55,7 +64,7 @@ class MazeTraveler:
         self.traveler_name = name
         print("Spawned " + self.traveler_name + " at " + str(self.currently_at) + " on maze symbol " + self.maze[y][x])
         if maze[y][x] == ".":
-            print("Dead end for " + self.traveler_name)
+            print(self.traveler_name + " spawned on dead end. Use static method is_valid_start to avoid.")
             self.found_dead_end = True
         else:
             self.found_dead_end = False
@@ -131,28 +140,29 @@ with open(sys.argv[1], 'r', encoding="utf-8") as file:
         line_num += 1
 
 # adjacency (diagonals never adjacent in this maze)
-first_step_list = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+first_step_list = [MazeTraveler.UP, MazeTraveler.DOWN, MazeTraveler.LEFT, MazeTraveler.RIGHT]
 # edge detection
 if start_coord[0] == 0:
-    first_step_list.remove((-1, 0))
+    first_step_list.remove(MazeTraveler.LEFT)
 if start_coord[0] == len(maze[1]) - 1:
-    first_step_list.remove((1, 0))
+    first_step_list.remove(MazeTraveler.RIGHT)
 if start_coord[1] == 0:
-    first_step_list.remove((0, -1))
+    first_step_list.remove(MazeTraveler.UP)
 if start_coord[1] == len(maze) - 1:
-    first_step_list.remove((0, 1))
+    first_step_list.remove(MazeTraveler.DOWN)
 # spawn the travelers, up to four. What a friendly bunch.
 i = 0
 for first_step in first_step_list:
-    if first_step == (0, 1):
+    if first_step == MazeTraveler.DOWN:
         traveler_name = "down_start"
-    elif first_step == (0, -1):
+    elif first_step == MazeTraveler.UP:
         traveler_name = "up_start"
-    elif first_step == (1, 0):
+    elif first_step == MazeTraveler.RIGHT:
         traveler_name = "right_start"
-    elif first_step == (-1, 0):
+    elif first_step == MazeTraveler.LEFT:
         traveler_name = "left_start"
     else:
+        print("Attempting to spawn traveler at unexpected location.")
         traveler_name = "unexpected"
     if MazeTraveler.is_valid_start(start_coord, first_step, maze):
         travelers.append(MazeTraveler(start_coord, first_step, maze, traveler_name))
