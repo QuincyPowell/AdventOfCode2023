@@ -16,7 +16,7 @@ class MazeTraveler:
     # What symbols connect to what adjacencies
     maze_legend = {
         ".": [],
-        "#": []
+        "#": [],
         "|": [UP, DOWN],
         "-": [LEFT, RIGHT],
         "L": [UP, RIGHT],
